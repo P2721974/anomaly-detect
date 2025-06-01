@@ -50,8 +50,10 @@ def build_combined_dataset(sources, output_path, deduplicate=True):
 
     if dataframes:
         combined = pd.concat(dataframes, ignore_index=True)
-        if deduplicate:
-            combined.drop_duplicates(inplace=True)
+        logger.info("Combined dataset shape before cleaning: %s", combined.shape)
+        
+        # Drop duplicates
+        combined.drop_duplicates(inplace=True)
 
         # Drop the 'source' column
         combined.drop(columns=['source'], inplace=True, errors='ignore')
@@ -63,6 +65,9 @@ def build_combined_dataset(sources, output_path, deduplicate=True):
             logger.error("Combined dataset contains non-numeric values: %s", e)
             raise
 
+        logger.info("Cleaned combined dataset shape: %s", combined.shape)
+
+        # Save
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         combined.to_csv(output_path, index=False)
         logger.info("Combined dataset saved to: %s", output_path)
@@ -72,7 +77,7 @@ def build_combined_dataset(sources, output_path, deduplicate=True):
         return pd.DataFrame()
 
 
-def split_dataset(df, label_col='label', train_size=0.7, val_size=0.15, test_size=0.15, stratify=True, random_state=42):
+def split_dataset(df, label_col='label', train_size=0.8, test_size=0.2, stratify=True, random_state=42):
     """
     Splits dataset into train, validation, and test sets.
 
@@ -82,26 +87,18 @@ def split_dataset(df, label_col='label', train_size=0.7, val_size=0.15, test_siz
     if label_col not in df.columns:
         raise ValueError(f"Label column '{label_col}' not found.")
 
-    if not (0.99 < (train_size + val_size + test_size) < 1.01):
+    if not (0.99 < (train_size + test_size) < 1.01):
         raise ValueError("Split ratios must sum to 1.")
 
     stratify_labels = df[label_col] if stratify else None
 
-    # First split: train vs temp (val + test)
-    df_train, df_temp = train_test_split(
+    # Split: train + test
+    df_train, df_test = train_test_split(
         df, train_size=train_size, stratify=stratify_labels, random_state=random_state
     )
 
-    # Remaining split: val vs test
-    relative_val_size = val_size / (val_size + test_size)
-    stratify_temp = df_temp[label_col] if stratify else None
-
-    df_val, df_test = train_test_split(
-        df_temp, train_size=relative_val_size, stratify=stratify_temp, random_state=random_state
-    )
-
-    logger.info("Split complete: train=%d, val=%d, test=%d", len(df_train), len(df_val), len(df_test))
-    return df_train.reset_index(drop=True), df_val.reset_index(drop=True), df_test.reset_index(drop=True)
+    logger.info("Split complete: train=%d, test=%d", len(df_train), len(df_test))
+    return df_train.reset_index(drop=True), df_test.reset_index(drop=True)
 
 
 def balance_labels(df, label_col='label', random_state=42):
@@ -175,17 +172,15 @@ def run_dataset_utils(args):
     if args.split:
         if df is None:
             df = pd.read_csv(output_path)
-        train_df, val_df, test_df = split_dataset(df)
+        train_df, test_df = split_dataset(df)
         base = output_path.replace(".csv", "")
         train_path = safe_save_path(f"{base}_train.csv")
-        val_path = safe_save_path(f"{base}_val.csv")
         test_path = safe_save_path(f"{base}_test.csv")
 
         train_df.to_csv(train_path, index=False)
-        val_df.to_csv(val_path, index=False)
         test_df.to_csv(test_path, index=False)
 
-        logger.info("Saved split datasets:\n- %s\n- %s\n- %s", train_path, val_path, test_path)
+        logger.info("Saved split datasets:\n- %s\n- %s", train_path, test_path)
 
     if not (args.combine or args.balance or args.split):
         logger.warning("No dataset operation specified.")

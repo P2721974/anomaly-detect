@@ -22,6 +22,9 @@ data/processed/
 data/public_datasets/
 data.nosync/
 
+# Testing Scripts
+scripts/
+
 # IDE configs
 .vscode/
 .idea/

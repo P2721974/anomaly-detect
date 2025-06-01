@@ -25,6 +25,10 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
 
     # Drop string-based ips to avoid dimension mismatch
     df = drop_columns(df, ['src', 'dst'])
+
+    # If csv contains labels - remove label column before detection
+    df = drop_columns(df, ['label'])
+        
     X = df.values
 
     # Load model metadata
