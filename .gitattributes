@@ -1,0 +1,4 @@
+data/public_datasets/cicids2017.zip filter=lfs diff=lfs merge=lfs -text
+data/public_datasets/nsl-kdd.zip filter=lfs diff=lfs merge=lfs -text
+data/public_datasets/unsw-nb15.zip filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
