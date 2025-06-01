@@ -1,0 +1,23 @@
+# requirements.txt
+
+# Python >=3.10 recommended
+
+# Core ML libraries
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.3.2
+tensorflow==2.15.0
+joblib==1.4.0
+
+# Packet processing
+scapy==2.5.0
+pyshark==0.6
+
+# Config + logging
+pyyaml==6.0.1
+tqdm==4.67.1
+requests==2.32.3
+
+# Visualisation
+matplotlib==3.8.3
+seaborn==0.13.2

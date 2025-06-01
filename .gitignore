@@ -1,0 +1,33 @@
+# .gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+.env/
+.venv/
+env/
+venv/
+
+# Output files
+data/detection/
+data/logs/
+data/models/
+data/pcaps/
+data/processed/
+data/public_datasets/
+data.nosync/
+
+# IDE configs
+.vscode/
+.idea/
+
+# OS artifacts
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+

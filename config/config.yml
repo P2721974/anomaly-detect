@@ -1,0 +1,86 @@
+# === General ===
+general:
+  environment: development
+  logging_level: INFO
+
+# === Common Filepaths ===
+paths:
+model_dir: data/models/
+dataset_dir: data/public.nosync/
+output_path: data/output/
+logs: data/logs/
+
+# === Capture Settings ===
+capture:
+  interface: en0
+  duration: 30
+  packet_count: 100
+  output_path: data/pcap/capture.pcap
+
+# === Preprocessing Settings ===
+preprocessing:
+  batch_size: 1000
+  label: Null
+  pcap_input: data/pcap/capture.pcap
+  csv_output: data/csv/preprocessed.csv
+
+# === Dataset Utils Settings ===
+dataset_utils:
+  output_path: data/csv/combined.csv
+
+# === Training Settings ===
+training:
+  input: data/csv/train.csv
+  save_dir: data/models/
+  model_type: autoencoder
+  n_estimators: 100
+  save_metadata: true
+  svm_kernel: rbf
+  svm_c: 1.0
+
+# === Detection Settings ===
+detection:
+  input_path: data/csv/test.csv
+  model_type: autoencoder
+  model_path: models/autoencoder/autoencoder_model/model.keras
+  csv_output: data/output/detection.csv
+  threshold: 0.5
+
+# === SIEM / Wazuh Integration ===
+siem:
+  mode: file    # Options: file, syslog, both
+  log_path: data/logs/alerts.log
+  syslog_host: 127.0.0.1
+  syslog_port: 514
+
+# === Public Dataset Settings ===
+public:
+  save_path: data/public.nosync/
+  nsl_url: https://github.com/defcom17/NSL_KDD/archive/master.zip
+  unsw_url: https://research.unsw.edu.au/projects/unsw-nb15-dataset
+  cicids_url: https://www.unb.ca/cic/datasets/ids-2017.html
+
+# === Local Pretrained Models and Public Datasets ===
+# add paths plus + threshold 
+registry:
+  models:
+    autoencoder_cicids.keras:
+      type: autoencoder
+      train_data: CICIDS2017
+    rf_unsw.pkl:
+      type: random_forest
+      train_data: UNSW-NB15
+    svm_nsl.pkl:
+      type: svm
+      train_data: NSL-KDD
+
+  datasets:
+    NSL-KDD:
+      id: nsl
+      manual: false
+    UNSW-NB15:
+      id: unsw
+      manual: true
+    CICIDS2017:
+      id: cicids
+      manual: true
