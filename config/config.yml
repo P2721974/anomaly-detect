@@ -55,7 +55,7 @@ siem:
 
 # === Public Dataset Settings ===
 public:
-  save_path: data/public.nosync/
+  save_path: data/public_datasets/
   nsl_url: https://github.com/defcom17/NSL_KDD/archive/master.zip
   unsw_url: https://research.unsw.edu.au/projects/unsw-nb15-dataset
   cicids_url: https://www.unb.ca/cic/datasets/ids-2017.html

@@ -131,7 +131,6 @@ def main():
         for model in list_pretrained_models():
             print(f"- {model}")
 
-# === make dynamic === 
     elif args.command == "list-datasets":
         print("Available public datasets:")
         for dataset in list_public_datasets():

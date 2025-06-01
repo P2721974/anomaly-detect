@@ -4,6 +4,7 @@ import os
 import zipfile
 import requests
 import pandas as pd
+import numpy as np
 import shutil
 
 from utils.config_loader import get_config
@@ -162,6 +163,35 @@ def prepare_unsw(input_path, output_path):
         logger.error("Failed to prepare UNSW-NB15: %s", e)
 
 
+def prepare_cicids(input_path, output_path):
+    """
+    Cleans and labels a CICIDS2017 ISCX CSV file into a usable dataset.
+    """
+    try:
+        logger.info("Loading CICIDS2017 file: %s", input_path)
+        df = pd.read_csv(input_path, low_memory=False)
+        df.columns = df.columns.str.strip()
+
+        if "Label" not in df.columns:
+            logger.error("No 'Label' column found in CSV.")
+            return
+
+        logger.info("Converting 'Label' column to binary...")
+        df["label"] = df["Label"].apply(lambda x: 0 if x.strip().upper() == "BENIGN" else 1)
+
+        logger.info("Dropping non-numeric features and cleaning data...")
+        df = df.select_dtypes(include=[np.number])
+        df = df.replace([np.inf, -np.inf], np.nan).dropna()
+
+        # Save
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        df.to_csv(output_path, index=False)
+        logger.info("CICIDS2017 ICSX CSV prepared and saved to: %s", output_path)
+    
+    except Exception as e:
+        logger.error("Failed to prepare CICIDS2017: %s", e)
+
+
 def handle_public_dataset(args):
     name = args.name.lower()
     save_dir = config['public']['save_path']
@@ -187,12 +217,45 @@ def handle_public_dataset(args):
         
         elif args.name == "unsw":
             raw_path = os.path.join(save_dir, "unsw-nb15/CSV_Files/Training and Testing Sets/UNSW_NB15_training-set.csv")
-            output_path = os.path.join(save_dir, "unsw-nb15/csv_files/unsw_train_clean.csv")
+            output_path = os.path.join(save_dir, "unsw-nb15/unsw_train_clean.csv")
             prepare_unsw(raw_path, output_path)
 
             raw_path = os.path.join(save_dir, "unsw-nb15/CSV_Files/Training and Testing Sets/UNSW_NB15_testing-set.csv")
-            output_path = os.path.join(save_dir, "unsw-nb15/csv_files/unsw_test_clean.csv")
+            output_path = os.path.join(save_dir, "unsw-nb15/unsw_test_clean.csv")
             prepare_unsw(raw_path, output_path)
+
+        elif args.name == "cicids":
+            raw_path = os.path.join(save_dir, "cicids2017/Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_1.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_2.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Friday-WorkingHours-Morning.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_3.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Monday-WorkingHours.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_4.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_5.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_6.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Tuesday-WorkingHours.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_7.csv")
+            prepare_cicids(raw_path, output_path)
+
+            raw_path = os.path.join(save_dir, "cicids2017/Wednesday-workingHours.pcap_ISCX.csv")
+            output_path = os.path.join(save_dir, "cicids2017/clean/cicids_clean_8.csv")
+            prepare_cicids(raw_path, output_path)
 
         else:
             logger.error("[!] Dataset '%s' is not yet supported for preparation", name)
