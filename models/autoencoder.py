@@ -63,10 +63,6 @@ class AutoencoderModel(BaseModel):
         X_scaled = self.scaler.transform(X)
         X_val_scaled = self.scaler.transform(X_val) if X_val is not None else None
 
-        # Sanity log: check stats pre- and post-scale
-        logger.info("[Train] Raw X mean/std: %.6f / %.6f", X.mean(), X.std())
-        logger.info("[Train] Scaled X mean/std: %.6f / %.6f", X_scaled.mean(), X_scaled.std())
-
         if np.isnan(X_scaled).any() or np.isinf(X_scaled).any():
             raise ValueError("Training input contains NaN or Inf after scaling.")
 
@@ -92,8 +88,9 @@ class AutoencoderModel(BaseModel):
         recon = self.model.predict(X_scaled, verbose=0)
         mse = np.mean(np.square(X_scaled - recon), axis=1)
         
-        logger.info("MSE mean: %.6f | std: %.6f", mse.mean(), mse.std())
+        logger.info("[Train MSE] mean: %.6f | std: %.6f", mse.mean(), mse.std())
         self.threshold = mse.mean() + 3 * mse.std()
+        
         logger.info("Training complete. Anomaly threshold set to %.6f", self.threshold)
 
 
@@ -115,18 +112,17 @@ class AutoencoderModel(BaseModel):
         if self.model is None or self.scaler is None:
             logger.error("Model or Model scaler not loaded.")
 
-        logger.info("[Eval] Raw X mean/std: %.6f / %.6f", X.mean(), X.std())
-
         X_scaled = self.scaler.transform(X)
-        logger.info("[Eval] Scaled X mean/std: %.6f / %.6f", X_scaled.mean(), X_scaled.std())
 
         recon = self.model.predict(X_scaled, verbose=0)
         mse = np.mean(np.square(X_scaled - recon), axis=1)
         y_pred = (mse > self.threshold).astype(int)
 
+        logger.info("[Eval MSE] mean: %.6f | std: %.6f", mse.mean(), mse.std())
+
         results = {
-            "mse_mean": float(mse.mean()),
-            "mse_std": float(mse.std()),
+            "mse_mean": mse.mean(),
+            "mse_std": mse.std(),
         }
 
         if y_true is not None:
