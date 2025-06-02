@@ -3,7 +3,6 @@
 import os
 import glob
 import pandas as pd
-from datetime import datetime
 from sklearn.utils import resample
 from sklearn.model_selection import train_test_split
 
@@ -16,17 +15,6 @@ config = get_config()
 logger = get_logger(__name__, config.get("general", {}).get("logging_level", "INFO"))
 
 
-def prepare_dataset_path(base_path=None):
-    base_path = base_path or config['dataset_utils']['output_path']
-    base_dir = os.path.dirname(base_path)
-    base_name = os.path.basename(base_path).replace('.csv', '')
-    os.makedirs(base_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    existing = glob.glob(os.path.join(base_dir, f"{base_name}_{timestamp}_*.csv"))
-    next_id = len(existing) + 1
-    return os.path.join(base_dir, f"{base_name}_{timestamp}_{next_id}.csv")
-
-
 def load_dataset(path):
     if os.path.isfile(path):
         return pd.read_csv(path)
@@ -37,7 +25,7 @@ def load_dataset(path):
         raise FileNotFoundError(f"Path not found: {path}")
 
 
-def build_combined_dataset(sources, output_path, deduplicate=True):
+def build_combined_dataset(sources, output_path):
     dataframes = []
 
     for src in tqdm_bar(sources, desc="Building dataset", unit="file"):

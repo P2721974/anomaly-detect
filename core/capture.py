@@ -33,10 +33,7 @@ def capture_packets(interface, duration, packet_count, output_path):
         bar.close()
 
         logger.info("Capture complete.")
-
-        # Save
-        pcap_path = safe_save_path(output_path)
-        save_pcap(captured, pcap_path)
+        save_pcap(captured, output_path)
 
     except Scapy_Exception as e:
         logger.error("Packet capture failed: %s", e)
@@ -48,7 +45,9 @@ def run_capture(args):
     interface = args.interface or config['capture']['interface']
     duration = args.duration or config['capture']['duration']
     packet_count = args.packet_count or config['capture']['packet_count']
-    output_path = args.output or config['capture']['output_path']
+
+    default_output = args.output or config['capture']['output_path']
+    output_path = safe_save_path(default_output)
 
     capture_packets(interface, duration, packet_count, output_path)
 
