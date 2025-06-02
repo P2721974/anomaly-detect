@@ -32,8 +32,8 @@ training:
   input: data/preprocessed/train.csv
   save_dir: data/models/
   model_type: autoencoder
-  n_estimators: 100
   save_metadata: true
+  n_estimators: 100
   svm_kernel: rbf
   svm_c: 1.0
 
@@ -41,7 +41,7 @@ training:
 detection:
   input_path: data/processed/test.csv
   model_type: autoencoder
-  model_path: models/autoencoder/autoencoder_model/model.keras
+  model_path: data/models/autoencoder/autoencoder_model
   csv_output: data/detection/detection.csv
   threshold: 0.5
 
@@ -77,9 +77,12 @@ registry:
     NSL-KDD:
       id: nsl
       manual: false
+      path: data/public_datasets/nsl-kdd/
     UNSW-NB15:
       id: unsw
       manual: true
+      path: data/public_datasets/unsw-nb15/
     CICIDS2017:
       id: cicids
       manual: true
+      path: data/public_datasets/cicids2017/

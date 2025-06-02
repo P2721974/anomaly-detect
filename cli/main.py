@@ -78,14 +78,14 @@ def parse_args():
 
     # Train
     train_parser = subparsers.add_parser("train", help="Train a machine learning model")
-    train_parser.add_argument("--model", required=True, help="Model type (random_forest, autoencoder, svm)")
-    train_parser.add_argument("--input", required=True, help="Training CSV file")
+    train_parser.add_argument("--model", help="Model type (random_forest, autoencoder, svm)")
+    train_parser.add_argument("--input", help="Training CSV file")
     train_parser.add_argument("--output", help="Optional override path to save model")
 
     # Detect
     detect_parser = subparsers.add_parser("detect", help="Run detection using a trained model")
-    detect_parser.add_argument("--model", required=True, help="Model type (random_forest, autoencoder, svm)")
-    detect_parser.add_argument("--model-path", required=True, help="Path to model file")
+    detect_parser.add_argument("--model", help="Model type (random_forest, autoencoder, svm)")
+    detect_parser.add_argument("--model-path", help="Path to model file")
     detect_parser.add_argument("--live", action="store_true", help="Enable live packet detection")
     detect_parser.add_argument("--interface", help="Network interface to monitor with")
     detect_parser.add_argument("--input", help="Input PCAP filepath for detection (incompatible with live detection)")

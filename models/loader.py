@@ -47,19 +47,3 @@ def instantiate_model(name, **kwargs):
     """
     logger.info("Instantiating model: %s", name)
     return get_model_class(name)(**kwargs)
-
-def load_model_instance(name: str, model_path: str) -> BaseModel:
-    """
-    Load a previously saved model from the specified path.
-
-    Parameters:
-    - name: Name of the model type (for correct loader)
-    - model_path: Path to the model prefix (excluding _model.h5, etc.)
-
-    Returns:
-    - Loaded model instance
-    """
-    model = instantiate_model(name)
-    model.load(model_path)
-    logger.info("Model '%s' loaded from %s", name, model_path)
-    return model

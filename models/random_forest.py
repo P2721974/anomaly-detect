@@ -36,10 +36,10 @@ class RandomForestModel(BaseModel):
         
         self.input_dim = X.shape[1]
 
-        n_estimators = 100      # arbitrary, put in config
+        n_estimators = config['training']['n_estimators']
 
         self.model = RandomForestClassifier(
-            n_estimators=1, 
+            n_estimators=n_estimators, 
             warm_start=True,
             **{k: v for k, v in kwargs.items() if k in RandomForestClassifier().get_params()}
             )
