@@ -37,31 +37,3 @@ siem:
   log_path: data/logs/alerts.log
   syslog_host: 127.0.0.1
   syslog_port: 514
-
-# === Local Pretrained Models and Public Datasets ===
-# add paths and update
-registry:
-  models:
-    autoencoder_cicids.keras:
-      type: autoencoder
-      train_data: CICIDS2017
-    rf_unsw.pkl:
-      type: random_forest
-      train_data: UNSW-NB15
-    svm_nsl.pkl:
-      type: svm
-      train_data: NSL-KDD
-
-  datasets:
-    NSL-KDD:
-      id: nsl
-      manual: false
-      path: data/public_datasets/nsl-kdd/
-    UNSW-NB15:
-      id: unsw
-      manual: true
-      path: data/public_datasets/unsw-nb15/
-    CICIDS2017:
-      id: cicids
-      manual: true
-      path: data/public_datasets/cicids2017/
