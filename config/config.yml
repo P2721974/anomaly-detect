@@ -1,14 +1,3 @@
-# === General ===
-general:
-  environment: development
-  logging_level: INFO
-
-# === Common Filepaths ===
-paths:
-model_dir: data/models/
-dataset_dir: data/public_datasets/
-logs: data/logs/
-
 # === Capture Settings ===
 capture:
   interface: en0
@@ -32,10 +21,7 @@ training:
   input: data/preprocessed/train.csv
   save_dir: data/models/
   model_type: autoencoder
-  save_metadata: true
   n_estimators: 100
-  svm_kernel: rbf
-  svm_c: 1.0
 
 # === Detection Settings ===
 detection:
@@ -52,15 +38,8 @@ siem:
   syslog_host: 127.0.0.1
   syslog_port: 514
 
-# === Public Dataset Settings ===
-public:
-  save_path: data/public_datasets/
-  nsl_url: https://github.com/defcom17/NSL_KDD/archive/master.zip
-  unsw_url: https://research.unsw.edu.au/projects/unsw-nb15-dataset
-  cicids_url: https://www.unb.ca/cic/datasets/ids-2017.html
-
 # === Local Pretrained Models and Public Datasets ===
-# add paths plus + threshold 
+# add paths and update
 registry:
   models:
     autoencoder_cicids.keras:

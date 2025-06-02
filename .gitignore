@@ -10,9 +10,6 @@ __pycache__/
 env/
 venv/
 
-# Public dataset formatting file
-core/public_datasets.py
-
 # Output files
 data/detection/
 data/logs/
@@ -26,7 +23,7 @@ data/public_datasets/cicids2017/
 data/public_datasets/nsl-kdd/
 data/public_datasets/unsw-nb15/
 
-# Testing Scripts
+# Testing scripts
 scripts/
 
 # IDE configs

@@ -54,10 +54,8 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
             if row['prediction'] == 1:
                 logger.debug("Anomaly detected at timestamp %s", row.get("timestamp"))
 
-        csv_output = output_path or config['detection']['csv_output']
-        safe_output_path = safe_save_path(csv_output)
-        save_dataframe(df, safe_output_path)
-        logger.info("Predictions saved to: %s", safe_output_path)
+        save_dataframe(df, output_path)
+        logger.info("Predictions saved to: %s", output_path)
 
     for _, row in df[df['prediction'] == 1].iterrows():
         alert = {
@@ -85,7 +83,8 @@ def run_detection(args):
     model_path = args.model_path or config['detection']['model_path']
     model_name = os.path.basename(model_path)
     input_path = args.input or config['detection']['input_path']
-    output_path = args.output or config['detection']['csv_output']
+    default_output = args.output or config['detection']['csv_output']
+    output_path = safe_save_path(default_output)
 
     logger.info("Loading model: %s", model_name)
     model = instantiate_model(model_type)

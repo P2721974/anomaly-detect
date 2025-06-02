@@ -26,7 +26,6 @@ import __version__
 from core.capture import run_capture, run_live_capture
 from core.preprocessor import run_preprocessor
 from core.dataset_utils import run_dataset_utils
-from core.public_datasets import handle_public_dataset
 from models.trainer import run_train_model
 from models.detector import run_detection, run_live_detection
 from utils.registry import list_pretrained_models, list_public_datasets
@@ -70,12 +69,6 @@ def parse_args():
     dataset_parser.add_argument("--split", action="store_true", help="Split dataset into train/val/test")
     dataset_parser.add_argument("--output", help="Base output filename for dataset results")
 
-    # Public Datasets
-    public_parser = subparsers.add_parser("public-dataset", help="Download or preprocess a public dataset")
-    public_parser.add_argument("--name", required=True, help="Dataset name: nsl, unsw, cicids")
-    public_parser.add_argument("--download", action="store_true", help="Download public dataset")
-    public_parser.add_argument("--prepare", action="store_true", help="Preprocess public dataset")
-
     # Train
     train_parser = subparsers.add_parser("train", help="Train a machine learning model")
     train_parser.add_argument("--model", help="Model type (random_forest, autoencoder, svm)")
@@ -113,9 +106,6 @@ def main():
 
     elif args.command == "dataset":
         run_dataset_utils(args)
-
-    elif args.command == "public-dataset":
-        handle_public_dataset(args)
 
     elif args.command == "train":
         run_train_model(args)
