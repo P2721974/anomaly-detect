@@ -5,6 +5,7 @@ import glob
 import joblib
 import json
 from datetime import datetime
+from scapy.all import wrpcap
 from tensorflow.keras.models import save_model
 
 from utils.logger import get_logger
@@ -21,6 +22,12 @@ def ensure_dir(path):
     if dir_path and not os.path.exists(dir_path):
         os.makedirs(dir_path, exist_ok=True)
         logger.debug("Created directory: %s", dir_path)
+
+
+def save_pcap(pcap, path):
+    ensure_dir(path)
+    wrpcap(path, pcap)
+    logger.info("PCAP saved: %s", path)
 
 
 def save_pickle(obj, path):
@@ -75,7 +82,7 @@ def generate_incremented_path(base_path, extension=None):
     existing = glob.glob(pattern)
     next_id = len(existing) + 1
 
-    ensure_dir(os.path.join(base_dir, 'placeholder.tmp'))  # ensures dir exists
+    ensure_dir(os.path.join(base_dir, 'placeholder.tmp'))  # ensure dir exists
     return os.path.join(base_dir, f"{base_name}_{timestamp}_{next_id}{ext}")
 
 

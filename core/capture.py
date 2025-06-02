@@ -1,27 +1,15 @@
 # core/capture.py
-import os
-import glob
-from datetime import datetime
+
 from tqdm import tqdm
-from scapy.all import sniff, wrpcap, Scapy_Exception
+from scapy.all import sniff, Scapy_Exception
 
 from utils.packet_utils import print_packet_summary
+from utils.file_saver import safe_save_path, save_pcap
 from utils.config_loader import get_config
 from utils.logger import get_logger
 
 config = get_config()
 logger = get_logger(__name__, config.get("general", {}).get("logging_level", "INFO"))
-
-
-def prepare_capture_path(base_path=None):
-    base_path = base_path or config['capture']['output_path']
-    base_dir = os.path.dirname(base_path)
-    base_name = os.path.basename(base_path).replace('.pcap', '')
-    os.makedirs(base_dir, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    existing = glob.glob(os.path.join(base_dir, f"{base_name}_{timestamp}_*.pcap"))
-    next_id = len(existing) + 1
-    return os.path.join(base_dir, f"{base_name}_{timestamp}_{next_id}.pcap")
 
 
 def capture_packets(interface, duration, packet_count, output_path):
@@ -30,7 +18,7 @@ def capture_packets(interface, duration, packet_count, output_path):
         captured = []
         bar = tqdm(total=packet_count, desc="Capturing Packets", unit="pkt", leave=True)
         
-        # More defining within a function -> investigate and change if possible
+        # defined within a function again -> change if poss.
         def handle(pkt):
             captured.append(pkt)
             bar.update(1)
@@ -43,8 +31,12 @@ def capture_packets(interface, duration, packet_count, output_path):
             )
         
         bar.close()
-        wrpcap(output_path, captured)
-        logger.info("Capture complete. Saved to: %s", output_path)
+
+        logger.info("Capture complete.")
+
+        # Save
+        pcap_path = safe_save_path(output_path)
+        save_pcap(captured, pcap_path)
 
     except Scapy_Exception as e:
         logger.error("Packet capture failed: %s", e)
@@ -56,7 +48,7 @@ def run_capture(args):
     interface = args.interface or config['capture']['interface']
     duration = args.duration or config['capture']['duration']
     packet_count = args.packet_count or config['capture']['packet_count']
-    output_path = args.output or prepare_capture_path()
+    output_path = args.output or config['capture']['output_path']
 
     capture_packets(interface, duration, packet_count, output_path)
 

@@ -17,7 +17,7 @@ core/public_datasets.py
 data/detection/
 data/logs/
 data/models/
-data/pcaps/
+data/captures/
 data/processed/
 data.nosync/
 
