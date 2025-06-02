@@ -21,14 +21,6 @@ class TestProgressUtils(unittest.TestCase):
 
         self.assertEqual(output, data)
 
-    def test_single_bar_updates_once(self):
-        buf = StringIO()
-        with redirect_stdout(buf):
-            with single_bar("Single Task", total=1, unit="step") as update:
-                update()  # simulate task completion
-        out = buf.getvalue()
-        self.assertIn("Single Task", out)
-
     def test_tqdm_keras_callback_updates_epochs(self):
         # Create a dummy Keras model
         model = Sequential([

@@ -47,7 +47,7 @@ class TestSVMModel(unittest.TestCase):
         preds = loaded.predict(self.X)
 
         self.assertEqual(len(preds), len(self.X))
-        metadata = loaded.get_metadata()
+        metadata = loaded.get_metadata(self.model_path)
         self.assertIn("model_type", metadata)
         self.assertTrue(metadata["model_type"].lower().startswith("svm"))
 

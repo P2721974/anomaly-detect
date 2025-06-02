@@ -92,21 +92,25 @@ def run_detection(args):
 
     logger.info("Loading data from: %s", input_path)
 
-    if input_path.endswith(".pcap"):
-        logger.info("Detected PCAP input - preprocessing file before detection.")
-        df = preprocess_file(input_path, batch_size, label=None)
-    elif input_path.endswith(".csv"):
-        logger.info("Detected CSV input - loading data directly from file.")
-        df = pd.read_csv(input_path)
-    else:
-        logger.error("Unsupported input file format. Use '.pcap' or '.csv'.")
-        return
-    
-    if df.empty:
+    try:
+        if input_path.endswith(".pcap"):
+            logger.info("Detected PCAP input - preprocessing file before detection.")
+            df = preprocess_file(input_path, batch_size, label=None)
+        elif input_path.endswith(".csv"):
+            logger.info("Detected CSV input - loading data directly from file.")
+            df = pd.read_csv(input_path)
+        else:
+            logger.error("Unsupported input file format. Use '.pcap' or '.csv'.")
+            return
+        
+        if df.empty:
             logger.warning("No usable packets to scan after loading.")
             return
 
-    detection(model, df, model_type, model_name, model_path, output_path)
+        detection(model, df, model_type, model_name, model_path, output_path)
+    
+    except Exception as e:
+        logger.error("Detection input data is invalid: %s", e)
 
 
 def run_live_detection(args):

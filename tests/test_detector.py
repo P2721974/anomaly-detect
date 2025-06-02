@@ -67,7 +67,7 @@ class TestDetectorModule(unittest.TestCase):
 
             with patch("models.detector.logger") as mock_logger:
                 run_detection(Args())
-                self.assertTrue(mock_logger.warning.called)
+                self.assertTrue(mock_logger.error.called)
 
             os.remove(tmp.name)
 

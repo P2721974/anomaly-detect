@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 from models.base_model import BaseModel
 from utils.metrics_utils import plot_classification_report
-from utils.progress import single_bar
+from utils.progress import tqdm_bar
 from utils.file_saver import save_pickle, save_json, ensure_dir
 from utils.config_loader import get_config
 from utils.logger import get_logger
@@ -36,7 +36,7 @@ class SVMModel(BaseModel):
         self.input_dim = X.shape[1]
         logger.info("Training SVM model on data with %d samples", len(X))
 
-        with single_bar("Training SVM", unit="step") as update:
+        with tqdm_bar("Training SVM", unit="step", total=1) as update:
             self.model.fit(X, y)
             update
 

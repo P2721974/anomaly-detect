@@ -48,7 +48,7 @@ class TestRandomForestModel(unittest.TestCase):
         preds = new_model.predict(self.X)
 
         self.assertEqual(len(preds), len(self.X))
-        metadata = new_model.get_metadata()
+        metadata = new_model.get_metadata(self.model_path)
         self.assertIn("model_type", metadata)
 
 

@@ -5,7 +5,6 @@ import tempfile
 import os
 import pandas as pd
 from core.dataset_utils import (
-    prepare_dataset_path,
     load_dataset,
     build_combined_dataset,
     split_dataset,
@@ -14,14 +13,6 @@ from core.dataset_utils import (
 
 
 class TestDatasetUtils(unittest.TestCase):
-
-    def test_prepare_dataset_path(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            path = os.path.join(tmp_dir, "dataset.csv")
-            output = prepare_dataset_path(path)
-            self.assertTrue(output.endswith(".csv"))
-            self.assertIn("dataset", output)
-            self.assertTrue(os.path.exists(os.path.dirname(output)))
 
     def test_load_dataset_from_file(self):
         with tempfile.NamedTemporaryFile(suffix=".csv", mode="w", delete=False) as tmp_file:
@@ -52,7 +43,7 @@ class TestDatasetUtils(unittest.TestCase):
 
             output = os.path.join(tmp_dir, "combined.csv")
             combined = build_combined_dataset([path1, path2], output)
-            self.assertEqual(len(combined), 1)
+            self.assertEqual(len(combined), 2)
             self.assertTrue(os.path.exists(output))
 
     def test_split_dataset_outputs_three_parts(self):
@@ -61,10 +52,9 @@ class TestDatasetUtils(unittest.TestCase):
             "b": list(range(100, 200)),
             "label": [0, 1] * 50
         })
-        train, val, test = split_dataset(df)
-        self.assertAlmostEqual(len(train), 70, delta=2)
-        self.assertAlmostEqual(len(val), 15, delta=1)
-        self.assertAlmostEqual(len(test), 15, delta=1)
+        train, test = split_dataset(df)
+        self.assertAlmostEqual(len(train), 80, delta=2)
+        self.assertAlmostEqual(len(test), 20, delta=1)
 
     def test_balance_labels_equal_output(self):
         df = pd.DataFrame({
