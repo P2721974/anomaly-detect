@@ -28,8 +28,8 @@ def train_autoencoder(input_path, output_path=None):
 
     logger.info("Loaded training data with shape: %s", df.shape)
 
-    # No label column
-    X = df.values
+    # If labelled data, drop labels
+    X = df.drop(columns=["label"]).values
     X_train, X_val = train_test_split(X, test_size=0.2, random_state=42)
 
     model = instantiate_model("autoencoder", input_dim=X.shape[1])

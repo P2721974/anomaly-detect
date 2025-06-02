@@ -6,8 +6,7 @@ general:
 # === Common Filepaths ===
 paths:
 model_dir: data/models/
-dataset_dir: data/public.nosync/
-output_path: data/output/
+dataset_dir: data/public_datasets/
 logs: data/logs/
 
 # === Capture Settings ===
@@ -15,22 +14,22 @@ capture:
   interface: en0
   duration: 30
   packet_count: 100
-  output_path: data/pcap/capture.pcap
+  output_path: data/captures/capture.pcap
 
 # === Preprocessing Settings ===
 preprocessing:
   batch_size: 1000
   label: Null
-  pcap_input: data/pcap/capture.pcap
-  csv_output: data/csv/preprocessed.csv
+  pcap_input: data/captures/capture.pcap
+  csv_output: data/processed/preprocessed.csv
 
 # === Dataset Utils Settings ===
 dataset_utils:
-  output_path: data/csv/combined.csv
+  output_path: data/combined/combined.csv
 
 # === Training Settings ===
 training:
-  input: data/csv/train.csv
+  input: data/preprocessed/train.csv
   save_dir: data/models/
   model_type: autoencoder
   n_estimators: 100
@@ -40,10 +39,10 @@ training:
 
 # === Detection Settings ===
 detection:
-  input_path: data/csv/test.csv
+  input_path: data/processed/test.csv
   model_type: autoencoder
   model_path: models/autoencoder/autoencoder_model/model.keras
-  csv_output: data/output/detection.csv
+  csv_output: data/detection/detection.csv
   threshold: 0.5
 
 # === SIEM / Wazuh Integration ===
