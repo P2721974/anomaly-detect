@@ -23,7 +23,7 @@ absl.logging.set_verbosity(absl.logging.ERROR)
 import argparse
 
 import __version__
-from core.capture import run_capture, run_live_capture
+from core.capture import run_capture
 from core.preprocessor import run_preprocessor
 from core.dataset_utils import run_dataset_utils
 from models.trainer import run_train_model
@@ -89,10 +89,7 @@ def main():
     args = parse_args()
 
     if args.command == "capture":
-        if args.live:
-            run_live_capture(args)
-        else:
-            run_capture(args)
+        run_capture(args)
 
     elif args.command == "preprocess":
         run_preprocessor(args)

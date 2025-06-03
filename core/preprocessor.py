@@ -16,7 +16,17 @@ config = get_config()
 logger = get_logger(__name__, config.get("general", {}).get("logging_level", "INFO"))
 
 
-def extract_packet_fields(pkt, last_pkt_time=None):
+def extract_packet_fields(pkt, last_pkt_time=None) -> None:
+    """
+    Extracts a wide range of features from a Scapy packet.
+    
+    Parameters:
+        pkt: The Scapy packet to extract from.
+        last_pkt_time (float, optional): Timestamp of the previous packet for inter-arrival time.
+        
+    Returns:
+        dict: Dictionary of extracted features from the packet.
+    """
     row = {
         # General
         'timestamp': float(pkt.time),
@@ -112,35 +122,59 @@ def extract_packet_fields(pkt, last_pkt_time=None):
     return row
 
 
-def extract_packet_features(pkt):
+def extract_packet_features(pkt) -> pd.DataFrame:
+    """
+    Converts a packet's extracted fields into a one-row DataFrame.
+    
+    Parameters:
+        pkt: The Scapy packet to convert.
+        
+    Returns:
+        pd.DataFrame: Single-row DataFrame of packet features.
+    """
     row = extract_packet_fields(pkt)
     return pd.DataFrame([row]) if row else pd.DataFrame()
 
 
-def clean_dataframe(df):
-    # Replace infs with NaNs
+def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Cleans the DataFrame by handling NaNs, Infs, and dropping unnecessary or 
+    unusable rows and columns.
+    
+    Parameters:
+        df (pd.DataFrame): DataFrame to be cleaned.
+        
+    Returns:
+        pd.DataFrame: Cleaned DataFrame with no invalid numerical values.
+    """
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    df = df.applymap(safe_numeric_cast) # avoid EDecimal error
 
-    # Drop rows with NaN in all numeric features
-    df = df.applymap(safe_numeric_cast)     # avoid EDecimal error
     numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
     df = df[df[numeric_cols].notna().any(axis=1)]
-
-    # Replace remaining usable NaNs with 0s
     df.fillna(0, inplace=True)
-
-    # Drop string-based ips
-    df = drop_columns(df, ['src', 'dst'])
+    df = drop_columns(df, ['src', 'dst'])   # Remove unnecessary IP address columns if present
 
     return df
 
 
-def preprocess_file(pcap_path, batch_size,  label):
+def preprocess_file(pcap_path: str, batch_size: int,  label: int | None) -> pd.DataFrame:
+    """
+    Preprocesses a PCAP file into a clean DataFrame of packet features.
+    
+    Parameters:
+        pcap_path (str): Path to the PCAP file.
+        batch_size (int): Number of packets to process per batch.
+        label (int | None): Optional anomaly label to add to the data.
+        
+    Returns:
+        pd.DataFrame: Final processed DataFrame containing all packet features.
+    """
     try:
         logger.info("Starting batch preprocessing for: %s", pcap_path)
 
-        file_obj = open(pcap_path, "rb")      # open file
-        packet_reader = PcapReader(file_obj)        # open in reader
+        file_obj = open(pcap_path, "rb")
+        packet_reader = PcapReader(file_obj)
 
         df_list = []
         batch_rows = []
@@ -168,7 +202,7 @@ def preprocess_file(pcap_path, batch_size,  label):
             df_list.append(df_clean)
             
         packet_reader.close()
-        file_obj.close()        # close file
+        file_obj.close()    # Ensure file is closed
 
         df_final = pd.concat(df_list, ignore_index=True)  
         logger.info("Finished preprocessing. Total valid rows: %s", len(df_final))
@@ -183,7 +217,18 @@ def preprocess_file(pcap_path, batch_size,  label):
         return pd.DataFrame()
 
 
-def run_preprocessor(args):
+def run_preprocessor(args) -> None:
+    """
+    Command-line interface handler for data preprocessing.
+    
+    Parameters:
+        args: Parsed command-line arguments containing 'label', 'input', and 'output' options.
+
+    This dispatcher handles the flow of the core preprocessing operation:
+        - Preprocess and save a full PCAP file.
+
+    Uses config defaults and safe file naming when needed.
+    """
     batch_size = config['preprocessing']['batch_size']
 
     label = args.label or config['preprocessing']['label']
@@ -192,6 +237,5 @@ def run_preprocessor(args):
 
     df = preprocess_file(pcap_input_path, batch_size, label)
 
-    # Save CSV
     output_csv_path = safe_save_path(csv_output_path)
     save_dataframe(df, output_csv_path)

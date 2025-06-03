@@ -15,6 +15,16 @@ logger = get_logger(__name__, config.get("general", {}).get("logging_level", "IN
 
 
 def train_autoencoder(input_path, output_path=None):
+    """
+    Trains an autoencoder model on a given dataset.
+
+    Parameters:
+        input_path (str): Path to the CSV input file.
+        output_path (str, optional): Directory to save the trained model files.
+
+    Returns:
+        dict: Evaluation metrics computed on validation data.
+    """
     logger.info("Starting Autoencoder training on: %s", input_path)
 
     if not os.path.exists(input_path):
@@ -39,7 +49,6 @@ def train_autoencoder(input_path, output_path=None):
     model = instantiate_model("autoencoder", input_dim=X.shape[1])
     model.train(X_train, X_val=X_val)
 
-    # Evaluate + save
     metrics = model.evaluate(X_val)
     model_dir = output_path or config['training']['save_dir'] + "autoencoder/autoencoder_model"
     model_dir = safe_save_path(model_dir, extension="")
@@ -52,6 +61,16 @@ def train_autoencoder(input_path, output_path=None):
 
 
 def train_random_forest(input_path, output_path=None):
+    """
+    Trains a Random Forest model on a given dataset.
+
+    Parameters:
+        input_path (str): Path to the CSV input file.
+        output_path (str, optional): Directory to save the trained model files.
+
+    Returns:
+        dict: Evaluation metrics computed on validation data.
+    """
     logger.info("Starting Random Forest training on: %s", input_path)
 
     if not os.path.exists(input_path):
@@ -85,7 +104,6 @@ def train_random_forest(input_path, output_path=None):
     logger.info("\nRandom Forest evaluation metrics:")
     pretty_print_metadata(model.get_metadata(model_dir))
 
-    # Save evaluation plots
     plot_path = os.path.join(model_dir, "evaluation_report.png")
     model.plot(X_val, y_val, output_path=plot_path)
 
@@ -93,6 +111,16 @@ def train_random_forest(input_path, output_path=None):
 
 
 def train_svm(input_path, output_path=None):
+    """
+    Trains an SVM model on a given dataset.
+
+    Parameters:
+        input_path (str): Path to the CSV input file.
+        output_path (str, optional): Directory to save the trained model files.
+
+    Returns:
+        dict: Evaluation metrics computed on validation data.
+    """
     logger.info("Starting SVM training on: %s", input_path)
 
     if not os.path.exists(input_path):
@@ -126,7 +154,6 @@ def train_svm(input_path, output_path=None):
     logger.info("\nSVM evaluation metrics:")
     pretty_print_metadata(model.get_metadata(model_dir))
 
-    # Save evaluation plots
     plot_path = os.path.join(model_dir, "evaluation_report.png")
     model.plot(X_val, y_val, output_path=plot_path)
 
@@ -134,6 +161,19 @@ def train_svm(input_path, output_path=None):
 
 
 def run_train_model(args):
+    """
+    Command-line interface handler for model training.
+
+    Parameters:
+        args: Parsed command-line arguments containing 'model', 'input', and 'output' options.
+    
+    This dispatcher handles the flow of the following training operations:
+        - Training an Autoencoder model on a given dataset.
+        - Training a Random Forest model on a given dataset.
+        - Training an SVM model on a given dataset.
+
+    Uses config defaults where needed.
+    """
     model_type = args.model or config['training']['model_type']
     input_path = args.input or config['training']['input']
     output_path = args.output or None

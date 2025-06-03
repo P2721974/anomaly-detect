@@ -19,6 +19,21 @@ logger = get_logger(__name__, config.get("general", {}).get("logging_level", "IN
 
 
 def detection(model, df, model_type, model_name, model_path, output_path=None, live=False):
+    """
+    Run anomaly detection on a preprocessed DataFrame using a loaded model.
+
+    Parameters:
+        model: Loaded model for prediction.
+        df (pd.DataFrame): Input DataFrame.
+        model_type (str): Model category (e.g., "autoencoder").
+        model_name (str): Model filename.
+        model_path (str): Path to model directory.
+        output_path (str, optional): Path to save prediction results.
+        live (bool): Indicates if detection is in live mode.
+
+    Returns:
+        pd.DataFrame: DataFrame with prediction and optionally anomaly scores.
+    """
     if df.empty:
         logger.debug("Empty DataFrame passed. Skipping.")
         return df
@@ -31,10 +46,8 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
         
     X = df.values
 
-    # Load model metadata
     metadata = model.get_metadata(model_path)
 
-    # Batch prediction
     predictions = model.predict(X)
 
     # Autoencoder-specific postprocessing
@@ -49,7 +62,7 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
     df['prediction'] = predictions
 
     if not live:
-        # Simulate per-row progress when offline
+        # Simulate per-row progress when running detection on a file
         for _, row in tqdm_bar(df.iterrows(), total=len(df), desc="Running Detection", unit="row"):
             if row['prediction'] == 1:
                 logger.debug("Anomaly detected at timestamp %s", row.get("timestamp"))
@@ -78,6 +91,12 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
 
 
 def run_detection(args):
+    """
+    Handles detection from a CSV or PCAP file using a pre-trained model.
+
+    Parameters:
+        args: Parsed command-line arguments.
+    """
     batch_size = config['preprocessing']['batch_size']
     model_type = args.model or config['detection']['model_type']
     model_path = args.model_path or config['detection']['model_path']
@@ -114,6 +133,12 @@ def run_detection(args):
 
 
 def run_live_detection(args):
+    """
+    Performs real-time detection on live packet data from a network interface.
+
+    Parameters:
+        args: Parsed command-line arguments including interface and model config.
+    """
     model_type = args.model or config['detection']['model_type']
     model_path = args.model_path or config['detection']['model_path']
     model_name = os.path.basename(model_path)
@@ -142,13 +167,3 @@ def run_live_detection(args):
             logger.warning("Live packet processing failed: %s", e)
 
     live_packet_monitor(interface, live_packet_handler, count=0, timeout=None)
-
-
-# ---
-    """
-    Load a trained model and input data, run anomaly detection,
-    write predictions to file, and forward alerts to Wazuh.
-
-    Parameters:
-    - args: CLI arguments or equivalent namespace with detection options
-    """

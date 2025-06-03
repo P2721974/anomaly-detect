@@ -25,25 +25,30 @@ logger = get_logger(__name__, config.get("general", {}).get("logging_level", "IN
 class AutoencoderModel(BaseModel):
     """
     Unsupervised anomaly detector using a simple feedforward autoencoder.
-    Predicts anomalies based on reconstruction error exceeding a set threshold.
+
+    Learns to reconstruct input data and flags anomalies based on reconstruction error.
     """
 
     def __init__(self, input_dim=None, threshold=None):
         """
-        Initialize AutoencoderModel.
+        Initialise the autoencoder model and related components.
 
         Parameters:
-        - input_dim: Number of features in input
-        - threshold: Anomaly threshold on reconstruction error
+            input_dim (int, optional): Dimensionality of input features. 
+            threshold (float, optional): Anomaly score threshold.
         """
         self.model = None
         self.threshold = threshold
         self.input_dim = input_dim
         self.scaler = StandardScaler()
 
-
     def build_model(self):
-        """Constructs and compiles the autoencoder architecture."""
+        """
+        Constructs and compiles the autoencoder architecture.
+        
+        Returns:
+            Model: A compiled Keras autoencoder model.
+        """
         input_layer = Input(shape=(self.input_dim,))
         encoded = Dense(64, activation='relu')(input_layer)
         encoded = Dense(32, activation='relu')(encoded)
@@ -51,11 +56,21 @@ class AutoencoderModel(BaseModel):
         output_layer = Dense(self.input_dim, activation='linear')(decoded)
         model = Model(inputs=input_layer, outputs=output_layer)
         model.compile(optimizer=Adam(learning_rate=0.001), loss='mse')
+
         return model
 
-
     def train(self, X, y=None, X_val=None):
-        """Train the autoencoder using unsupervised learning."""
+        """
+        Trains the autoencoder model using unsupervised learning.
+        
+        Parameters:
+            X (np.array or pd.DataFrame): Training feature data.
+            y (ignored): Included for compatibility; not used.
+            X_val (np.ndarray or pd.DataFrame, optional): Optional validation data.
+
+        Raises:
+            ValueError: If input data contains NaNs or Infs after scaling.
+        """
         self.input_dim = X.shape[1]
         self.model = self.build_model()
         
@@ -84,7 +99,7 @@ class AutoencoderModel(BaseModel):
             )
             update()
 
-        # Compute threshold
+        # Set anomaly threshold based on reconstruction error distribution
         recon = self.model.predict(X_scaled, verbose=0)
         mse = np.mean(np.square(X_scaled - recon), axis=1)
         
@@ -95,7 +110,15 @@ class AutoencoderModel(BaseModel):
 
 
     def predict(self, X):
-        """Return binary anomaly predictions based on reconstruction error."""
+        """
+        Predicts binary anomaly labels based on reconstruction error.
+
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Feature data to score.
+
+        Returns:
+            np.ndarray: Binary predictions (0 = normal, 1 = anomalous).
+        """
         if self.model is None or self.scaler is None:
             raise ValueError("Model or scaler not loaded")
         if X.shape[1] != self.input_dim:
@@ -109,6 +132,16 @@ class AutoencoderModel(BaseModel):
 
 
     def evaluate(self, X, y_true=None):
+        """
+        Evaluates the model using reconstruction error and optional labels.
+
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Input data.
+            y_true (np.ndarray or list, optional): Ground truth labels.
+
+        Returns:
+            dict: Evaluation metrics and statistics.
+        """
         if self.model is None or self.scaler is None:
             logger.error("Model or Model scaler not loaded.")
 
@@ -142,21 +175,20 @@ class AutoencoderModel(BaseModel):
 
     def save(self, path, metrics=None):
         """
-        Save the autoencoder model and all metadata to two files:
-        - model.keras
-        - metadata.json (includes threshold, input_dim, scaler ref, metrics)
+        Saves the trained autoencoder model and metadata to disk.
+
+        Parameters:
+            path (str): Directory path to save model components.
+            metrics (dict, optional): Evaluation metrics to include in metadata.    
         """
         ensure_dir(path)
 
-        # Save model
         model_path = os.path.join(path, 'model.keras')
         save_keras_model(self.model, model_path)
         
-        # Save scaler
         scaler_path = os.path.join(path, 'scaler.pkl')
         save_pickle(self.scaler, scaler_path)
 
-        # Metadata dict
         self.metadata = {
             "model_type": "autoencoder",
             "model_path": model_path,
@@ -166,7 +198,6 @@ class AutoencoderModel(BaseModel):
             "evaluation_metrics": metrics or {}
         }
 
-        # Save metadata
         metadata_path = os.path.join(path, 'metadata.json')
         save_json(self.metadata, metadata_path)
 
@@ -175,31 +206,38 @@ class AutoencoderModel(BaseModel):
 
     def load(self, path):
         """
-        Load the autoencoder model, scaler, and metadata from disk.
+        Loads the trained model, scaler, and metadata from disk.
+
+        Parameters:
+            path (str): Directory where model components are stored.
         """
-        # Load model
         self.model = load_model(os.path.join(path, 'model.keras'))
 
-        # Load metadata
         metadata_path = os.path.join(path, 'metadata.json')
         if os.path.exists(metadata_path):
             with open(metadata_path, 'r') as f:
                 self.metadata = json.load(f)
 
-        # Store full path for get_metadata() access
         self.metadata_path = metadata_path
 
         # Restore attributes
         self.input_dim = self.metadata.get("input_dim")
         self.threshold = self.metadata.get("threshold")
-
-        # Load scaler from referenced path
         self.scaler = joblib.load(self.metadata.get("scaler_path"))
 
         logger.info("Autoencoder model loaded from: %s", path)
 
 
     def get_metadata(self, path) -> dict:
+        """
+        Returns metadata dictionary for the trained model.
+
+        Parameters:
+            path (str, optional): Override path (not required).
+
+        Returns:
+            dict: Metadata including paths, threshold, and metrics.
+        """
         return self.metadata or {
             "model_type": "random_forest",
             "model_path": os.path.join(path, "model.pkl"),

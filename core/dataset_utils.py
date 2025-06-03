@@ -15,7 +15,16 @@ config = get_config()
 logger = get_logger(__name__, config.get("general", {}).get("logging_level", "INFO"))
 
 
-def load_dataset(path):
+def load_dataset(path: str) -> pd.DataFrame:
+    """
+    Loads a dataset from a file or directory containing CSVs.
+    
+    Parameters:
+        path (str): Path to a CSV file or directory of CSV files.
+        
+    Returns:
+        pd.Dataframe: Combined DataDrame from the CSVs.
+    """
     if os.path.isfile(path):
         return pd.read_csv(path)
     elif os.path.isdir(path):
@@ -25,7 +34,17 @@ def load_dataset(path):
         raise FileNotFoundError(f"Path not found: {path}")
 
 
-def build_combined_dataset(sources, output_path):
+def build_combined_dataset(sources: list[str], output_path: str) -> pd.DataFrame:
+    """
+    Builds and saves a combined dataset from multiple CSV sources.
+    
+    Parameters:
+        sources (list[str]): List of file paths or directories to load datasets from.
+        output_path (str): Destination file path for the combined CSV.
+    
+    Returns:
+        pd.DataFrame: The combined and cleaned dataset.
+    """
     dataframes = []
 
     for src in tqdm_bar(sources, desc="Building dataset", unit="file"):
@@ -40,10 +59,8 @@ def build_combined_dataset(sources, output_path):
         combined = pd.concat(dataframes, ignore_index=True)
         logger.info("Combined dataset shape before cleaning: %s", combined.shape)
         
-        # Drop duplicates
+        # Remove duplicates and unnecessary columns
         combined.drop_duplicates(inplace=True)
-
-        # Drop the 'source' column
         combined.drop(columns=['source'], inplace=True, errors='ignore')
 
         # Ensure all values are numeric
@@ -55,7 +72,6 @@ def build_combined_dataset(sources, output_path):
 
         logger.info("Cleaned combined dataset shape: %s", combined.shape)
 
-        # Save
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         combined.to_csv(output_path, index=False)
         logger.info("Combined dataset saved to: %s", output_path)
@@ -65,12 +81,20 @@ def build_combined_dataset(sources, output_path):
         return pd.DataFrame()
 
 
-def split_dataset(df, label_col='label', train_size=0.8, test_size=0.2, stratify=True, random_state=42):
+def split_dataset(df: pd.DataFrame, label_col: str = 'label', train_size: float = 0.8, test_size: float = 0.2, stratify: bool = True, random_state: int = 42)-> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Splits dataset into train, validation, and test sets.
+    Splits dataset into test and train sets.
+
+    Parameters:
+        df (pd.DataFrame): the dataset to split.
+        label_col (str): Column to use for stratification.
+        train_size (float): Proportion of data to use for training.
+        test_size (float): Proportion of data to use for testing.
+        stratify (bool): Whether to stratify the split based on label column.
+        random_state (int): Seed for reproducibility.
 
     Returns:
-    - train_df, val_df, test_df
+        tuple[pd.DataFrame, pd.Dataframe]: Training and test datasets.
     """
     if label_col not in df.columns:
         raise ValueError(f"Label column '{label_col}' not found.")
@@ -80,7 +104,6 @@ def split_dataset(df, label_col='label', train_size=0.8, test_size=0.2, stratify
 
     stratify_labels = df[label_col] if stratify else None
 
-    # Split: train + test
     df_train, df_test = train_test_split(
         df, train_size=train_size, stratify=stratify_labels, random_state=random_state
     )
@@ -89,17 +112,17 @@ def split_dataset(df, label_col='label', train_size=0.8, test_size=0.2, stratify
     return df_train.reset_index(drop=True), df_test.reset_index(drop=True)
 
 
-def balance_labels(df, label_col='label', random_state=42):
+def balance_labels(df: pd.DataFrame, label_col: str = 'label', random_state: int = 42) -> pd.DataFrame:
     """
-    Undersamples the majority class to create a 50/50 balanced dataset.
+    Undersamples the majority class to create a balanced dataset.
 
     Parameters:
-    - df: Input DataFrame with a label column
-    - label_col: Column name for the binary class label (default = 'label')
-    - random_state: Seed for reproducibility
+        df (pd.DataFrame): Input DataFrame with a label column.
+        label_col (str): Column name for the binary class label.
+        random_state (42): Seed for reproducibility.
 
     Returns:
-    - A balanced DataFrame
+        pd.DataFrame: Balanced dataset with equal samples from each class.
     """
     if label_col not in df.columns:
         raise ValueError(f"Label column '{label_col}' not found in dataset.")
@@ -110,13 +133,13 @@ def balance_labels(df, label_col='label', random_state=42):
 
     logger.info("Class distribution before balancing:\n%s", class_counts)
 
-    # Identify majority and minority
     class_0, class_1 = class_counts.index
     df_minority = df[df[label_col] == class_0]
     df_majority = df[df[label_col] == class_1]
 
+    # Ensure df_minority is actually the smaller class
     if len(df_majority) < len(df_minority):
-        df_minority, df_majority = df_majority, df_minority  # swap
+        df_minority, df_majority = df_majority, df_minority
 
     df_majority_downsampled = resample(
         df_majority,
@@ -131,13 +154,19 @@ def balance_labels(df, label_col='label', random_state=42):
     return df_balanced.sample(frac=1, random_state=random_state).reset_index(drop=True)
 
 
-def run_dataset_utils(args):
+def run_dataset_utils(args) -> None:
     """
-    Dispatcher for dataset utility actions:
-    - combine
-    - balance
-    - split
-    Uses safe saving and config defaults for output paths.
+    Command-line interface handler for dataset operations.
+
+    Parameters:
+        args: Parsed command-line arguments containing 'combine', 'balance', 'split', and 'output' options.
+
+    This dispatcher handles the flow of the following dataset transformations:
+        - Combining multiple datasets.
+        - Balancing class distribution.
+        - Spltting into test/train sets.
+
+    Uses config defaults and safe file naming when needed.
     """
     default_output = config['dataset_utils']['output_path']
     output_path = args.output or safe_save_path(default_output)

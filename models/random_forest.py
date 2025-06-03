@@ -19,18 +19,33 @@ logger = get_logger(__name__, config.get("general", {}).get("logging_level", "IN
 class RandomForestModel(BaseModel):
     """
     Random Forest classifier implementation of BaseModel.
-    Suitable for supervised learning on labeled datasets.
+
+    Suitable for supervised learning on labelled datasets.
     """
 
     def __init__(self, **kwargs):
+        """
+        Initialises the Random Forest model with filtered keyword arguments.
+
+        Parameters:
+            **kwargs: Hyperparameters for RandomForestClassifier. Unrelated keys are ignored.
+        """
         # Strip out unrelated kwargs like 'input_dim'
         rf_kwargs = {k: v for k, v in kwargs.items() if k in RandomForestClassifier().get_params()}
         self.model = RandomForestClassifier(**rf_kwargs)
         self.input_dim = None
         self.metadata = {}
-        logger.info("Initialized Random Forest model with params: %s", rf_kwargs)
+        logger.info("Initialised Random Forest model with params: %s", rf_kwargs)
 
     def train(self, X, y=None, **kwargs):
+        """
+        Trains the Random Forest model on labelled data.
+
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Input features.
+            y (np.ndarray or pd.Series): Class labels.
+            **kwargs: Additional hyperparameters for RandomForestClassifier.
+        """
         if y is None:
             raise ValueError("Supervised training requires labels (y).")
         
@@ -53,10 +68,30 @@ class RandomForestModel(BaseModel):
         logger.info("Training complete.")
 
     def predict(self, X):
+        """
+        Generates class predictions from the trained model.
+
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Input features.
+
+        Returns:
+            np.ndarray: Predicted labels.
+        """
         logger.info("Predicting using trained Random Forest model on %d samples", len(X))
         return self.model.predict(X)
 
     def evaluate(self, X, y_true, log_metrics=False):
+        """
+        Evaluates the classifier on labelled data.
+
+        Parameters:
+            X (np.ndarray or pd.DataFrame): Input features.
+            y_true (np.ndarray or pd.Series): Ground truth labels.
+            log_metrics (bool): Whether to log classification report.
+
+        Returns:
+            dict: Evaluation metrics including accuracy, precision, recall, and F1 score.
+        """
         if self.model is None:
             raise ValueError("Model not trained or loaded.")
 
@@ -76,6 +111,15 @@ class RandomForestModel(BaseModel):
         return metrics
     
     def plot(self, X_val, y_val, output_path=None, title=None):
+        """
+        Generates and saves a classification report plot.
+
+        Parameters:
+            X_val (np.ndarray): Validation feature set.
+            y_val (np.ndarray): Validation labels.
+            output_path (str, optional): File path to save plot.
+            title (str, optional): Title for the plot.
+        """
         y_pred = self.model.predict(X_val)
         metrics = self.evaluate(X_val, y_val, log_metrics=True)
         title = title or f"{self.metadata.get('model_type', 'Model')} Evaluation"
@@ -83,9 +127,15 @@ class RandomForestModel(BaseModel):
         plot_classification_report(metrics, y_val, y_pred, title=title, output_path=output_path)
 
     def save(self, path,  metrics=None):
+        """
+        Saves the model, metadata, and optionally evaluation metrics.
+
+        Parameters:
+            path (str): Directory to save model files.
+            metrics (dict, optional): Evaluation metrics to store in metadata.
+        """
         ensure_dir(path)
 
-        # Save model
         model_path = os.path.join(path, "model.pkl")
         save_pickle(self.model, model_path)
 
@@ -95,17 +145,22 @@ class RandomForestModel(BaseModel):
             "input_dim": self.input_dim,
             "evaluation_metrics": metrics or {}
         }
-        # Save metadata
+
         metadata_path = os.path.join(path, 'metadata.json')
         save_json(self.metadata, metadata_path)
 
         logger.info("Random Forest model, metadata, and metrics plot saved to: %s", path)
 
     def load(self, path):
+        """
+        Loads the model and metadata from disk.
+
+        Parameters:
+            path (str): Directory to load model files from.
+        """
         model_path = os.path.join(path, 'model.pkl')
         metadata_path = os.path.join(path, 'metadata.json')
 
-        # Load model
         self.model = joblib.load(model_path)
 
         if os.path.exists(metadata_path):
@@ -116,6 +171,15 @@ class RandomForestModel(BaseModel):
         logger.info("Random Forest model loaded from: %s", path)
 
     def get_metadata(self, path) -> dict:
+        """
+        Returns stored model metadata.
+
+        Parameters:
+            path (str): Base path to construct fallback metadata if none exists.
+
+        Returns:
+            dict: Metadata dictionary.
+        """
         return self.metadata or {
             "model_type": "random_forest",
             "model_path": os.path.join(path, "model.pkl"),
