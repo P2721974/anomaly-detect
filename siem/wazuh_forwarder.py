@@ -1,7 +1,5 @@
 # siem/wazuh_forwarder.py
-"""
-Forward alerts to Wazuh via file log or syslog, depending on config settings.
-"""
+
 import json
 import os
 import socket
@@ -19,14 +17,19 @@ DEFAULT_SYSLOG_PORT = config['siem']['syslog_port']
 
 def forward_alert(alert: dict, dry_run: bool = False) -> bool:
     """
-    Forward alert to Wazuh based on config: file, syslog, or both.
+    Forwards an alert to Wazuh via file logging or syslog.
+
+    Delivery mode is controlled by `siem.mode` in the config file, which can be:
+        - 'file': log alerts to a file
+        - 'syslog': send alerts to a syslog server
+        - 'both': do both
 
     Parameters:
-    - alert: dictionary representing the alert payload
-    - dry_run: if True, do not actually send, just log action
+        alert (dict): Dictionary containing the alert data.
+        dry_run (bool): If True, simulate sending without actually writing/transmitting.
 
     Returns:
-    - True if at least one delivery was successful, False otherwise
+        bool: True if at least one delivery was successful, False otherwise.
     """
     alert['timestamp'] = alert.get('timestamp') or datetime.utcnow().isoformat()
     alert_json = json.dumps(alert)

@@ -15,8 +15,10 @@ logger = get_logger(__name__, "INFO")
 
 def ensure_dir(path):
     """
-    Ensures the directory exists for a given file or directory path.
-    If a file path is passed, its parent directory is created.
+    Ensures the directory for a given file or folder path exists.
+
+    Parameters:
+        path (str): File or Directory path.
     """
     dir_path = path if os.path.isdir(path) else os.path.dirname(path)
     if dir_path and not os.path.exists(dir_path):
@@ -25,18 +27,39 @@ def ensure_dir(path):
 
 
 def save_pcap(pcap, path):
+    """
+    Saves a list of packets to a PCAP file.
+    
+    Parameters:
+        pcap (list): List of Scapy packets.
+        path (str): Destination file path.
+    """
     ensure_dir(path)
     wrpcap(path, pcap)
     logger.info("PCAP saved: %s", path)
 
 
 def save_pickle(obj, path):
+    """
+    Saves a Python object using joblib.
+
+    Args:
+        obj: Object to serialise.
+        path (str): Destination file path.
+    """
     ensure_dir(path)
     joblib.dump(obj, path)
     logger.info("Pickle saved: %s", path)
 
 
 def save_json(obj, path):
+    """
+    Saves a dictionary or list as a JSON file.
+    
+    Parameters:
+        obj: Data to save.
+        path (str): Destination file path.
+    """
     ensure_dir(path)
     with open(path, 'w') as f:
         json.dump(obj, f, indent=2)
@@ -44,6 +67,12 @@ def save_json(obj, path):
 
 
 def save_text(text, path):
+    """
+    Saves a string or text block to a plain text file.
+    
+    Parameters:
+        text (str): Text content to write.
+        path (str): Destination file path."""
     ensure_dir(path)
     with open(path, 'w') as f:
         f.write(str(text))
@@ -51,12 +80,25 @@ def save_text(text, path):
 
 
 def save_dataframe(df, path):
+    """
+    Saves a pandas DataFrame to a CSV file.
+    
+    Paramters:
+        df (pd.DataFrame): Data to save.
+        path (str): Destination file path.
+    """
     ensure_dir(path)
     df.to_csv(path, index=False)
     logger.info("CSV saved: %s", path)
 
 
 def save_keras_model(model, path):
+    """
+    Saves a compiled Keras model to disk.
+    
+    Parameters:
+        model: Keras model object.
+        path (str): Destination file path."""
     ensure_dir(path)
     save_model(model, path)
     logger.info("Keras model saved: %s", path)
@@ -64,14 +106,14 @@ def save_keras_model(model, path):
 
 def generate_incremented_path(base_path, extension=None):
     """
-    Generates a timestamped, incremented output path.
+    Generates a unique, timestamped output file path.
 
     Parameters:
-    - base_path (str): Path like 'data/output/myfile.csv' or 'data/models/model'
-    - extension (str): Optional override extension (e.g., '.csv', '.pcap')
+        base_path (str): Originial file path (either from cli input or `config.yml`).
+        extension (str, optional): Optional override file extension.
 
     Returns:
-    - str: Path like 'data/output/myfile_20250525_151045_1.csv'
+        str: A file path with timestamp and increment suffix.
     """
     base_dir = os.path.dirname(base_path)
     base_name = os.path.splitext(os.path.basename(base_path))[0]
@@ -82,20 +124,20 @@ def generate_incremented_path(base_path, extension=None):
     existing = glob.glob(pattern)
     next_id = len(existing) + 1
 
-    ensure_dir(os.path.join(base_dir, 'placeholder.tmp'))  # ensure dir exists
+    ensure_dir(os.path.join(base_dir, 'placeholder.tmp'))
     return os.path.join(base_dir, f"{base_name}_{timestamp}_{next_id}{ext}")
 
 
 def safe_save_path(base_path, extension=None):
     """
-    Ensures file is saved safely. If file exists, appends timestamped increment.
+    Ensures file is saved safely. If file already exists, appends timestamped increment.
 
     Parameters:
-    - base_path (str): Suggested full file path
-    - extension (str): Optional extension override
+        base_path (str): Original file path.
+        extension (str, optional): Optional override file extension.
 
     Returns:
-    - str: Safe, unique file path (original or incremented)
+        str: Modified file path if original already exists, if not, returns original file path.
     """
     if os.path.exists(base_path):
         logger.warning("[!] File already exists: %s. Generating new path...", base_path)
@@ -105,10 +147,13 @@ def safe_save_path(base_path, extension=None):
 
 def get_base_filename(path):
     """
-    Returns the base filename (without extension) from a given file path.
+    Extracts the base filename from a given file path, without its extension.
 
-    Example:
-        "data/output/my_dataset_20250525_153045.csv" → "my_dataset_20250525_153045"
+    Parameters:
+        path (str): Full file path.
+
+    Returns:
+        str: Filename without directory or extension.
     """
     filename = os.path.basename(path)
     return os.path.splitext(filename)[0]

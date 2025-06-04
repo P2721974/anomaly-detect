@@ -13,27 +13,31 @@ config = get_config()
 logger = get_logger(__name__, config.get("general", {}).get("logging_level", "INFO"))
 
 
-def pretty_print_metadata(metadata: dict, indent: int = 2):
+def pretty_print_metadata(metadata: dict, indent: int = 4):
     """
-    Makes model metadata and metrics pretty.
+    Makes model metadata and metrics pretty (formatted JSON).
 
     Parameters:
-    - metadata: Dictionary containing model info
-    - indent: Indentation level for JSON formatting
+        metadata (dict): Dictionary containing model metadata and metrics.
+        indent (int): Number of spaces for indentation (default is 4).
     """
     if not metadata:
         logger.warning("[!] No metadata found.")
         return
-
     print(json.dumps(metadata, indent=indent))
 
 def plot_classification_report(metrics: dict, y_true, y_pred, title: str = "Model Evaluation", output_path: str = None):
     """
-    Generate a side-by-side visualization of:
-    - Classification metrics bar chart
-    - Confusion matrix heatmap
+    Visualises model metrics using a bar chart and confusion matrix.
+
+    Parameters:
+        metrics (dict): Dictionary with 'accuracy', 'precision', 'recall', and 'f1_score'.
+        y_true (list or np.ndarray): Ground truth labels.
+        y_pred (list or np.ndarray): Predicted labels.
+        title (str, optional): title for the entire plot.
+        output_path (str, optional): Destination file path to save to, instead of displaying plot.
     """
-    sns.set(style="whitegrid")
+    sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
     # Bar chart

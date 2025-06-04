@@ -14,7 +14,7 @@ from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_sc
 
 from models.base_model import BaseModel
 from utils.file_saver import save_keras_model, save_pickle, save_json, ensure_dir
-from utils.progress import single_bar, TqdmKerasCallback
+from utils.progress import single_bar
 from utils.config_loader import get_config
 from utils.logger import get_logger
 
@@ -92,8 +92,7 @@ class AutoencoderModel(BaseModel):
                 batch_size=32,
                 validation_data=(X_val_scaled, X_val_scaled) if X_val_scaled is not None else None,
                 callbacks=[
-                    EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True), 
-                    TqdmKerasCallback(max_epochs)
+                    EarlyStopping(monitor='loss', patience=patience, restore_best_weights=True),
                     ],
                 verbose=0
             )

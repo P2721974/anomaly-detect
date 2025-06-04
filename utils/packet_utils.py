@@ -16,11 +16,11 @@ def drop_columns(df, columns):
     Drops specified columns from a DataFrame if they exist.
 
     Parameters:
-    - df: pandas DataFrame
-    - columns: list of column names to drop
+        df (pd.DataFrame): The DataFrame to modify.
+        columns (list): List of column names to drop.
 
     Returns:
-    - Modified DataFrame
+        pd.DataFrame: DataFrame with columns removed.
     """
     for col in columns:
         if col in df.columns:
@@ -30,6 +30,12 @@ def drop_columns(df, columns):
 
 
 def print_packet_summary(pkt):
+    """
+    Logs basic packet information to the screen.
+    
+    Parameters:
+        pkt (scapy.Packet): Packet to display.
+    """
     if IP in pkt:
         pkt_src = pkt[IP].src
         pkt_dst = pkt[IP].dst
@@ -45,28 +51,25 @@ def print_packet_summary(pkt):
                 pkt_src, pkt_dst, pkt_proto, len(pkt))
 
 
-def calc_entropy(data: bytes):
-    if not data:
-        return 0.0
-
-    length = len(data)
-    counts = Counter(data)
-    entropy = -sum((count / length) * math.log2(count / length) for count in counts.values())
-
-    return round(entropy, 4)
-
-
 def safe_numeric_cast(x):
+    """
+    Attempts to safely convert various numeric types to float.
+    
+    Parameters:
+        x: Input value to cast.
+        
+    Returns: 
+        float or original value if cast fails.
+    """
     if isinstance(x, (float, int)):
         return x
+    
     if isinstance(x, decimal.Decimal):
         return float(x)
+    
     if hasattr(x, '__float__'):
         try:
             return float(x)
         except:
             return x
     return x
-
-
-

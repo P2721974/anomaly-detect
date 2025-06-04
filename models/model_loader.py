@@ -1,4 +1,4 @@
-# models/loader.py
+# models/model_loader.py
 
 from models.random_forest import RandomForestModel
 from models.autoencoder import AutoencoderModel
@@ -18,20 +18,22 @@ MODEL_REGISTRY = {
 
 def get_model_class(name):
     """
-    Retrieve the model class from the registry based on name.
+    Retrieves a model class from the registry by name.
 
     Parameters:
-    - name: Name of the model (case-insensitive)
+        name (str): Name of the model (case-insensitive).
 
     Returns:
-    - A class object inheriting from BaseModel
+        Type[BaseModel]: Model class inheriting from BaseModel.
     """
     name = name.lower()
     if name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{name}' is not supported. Available: {list(MODEL_REGISTRY.keys())}")
+    
     cls = MODEL_REGISTRY[name]
     if not issubclass(cls, BaseModel):
         raise TypeError(f"Model '{name}' does not implement BaseModel.")
+        
     return cls
 
 def instantiate_model(name, **kwargs):
@@ -39,11 +41,11 @@ def instantiate_model(name, **kwargs):
     Instantiate a model with optional constructor arguments.
 
     Parameters:
-    - name: Name of the model
-    - kwargs: Parameters passed to the model's constructor
+        name (str): Name of the model.
+        **kwargs: Keyword arguments passed to the model constructor.
 
     Returns:
-    - An instance of the selected model
+        BaseModel: Instantiated model object.
     """
     logger.info("Instantiating model: %s", name)
     return get_model_class(name)(**kwargs)

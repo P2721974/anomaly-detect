@@ -6,7 +6,7 @@ import pandas as pd
 
 from core.capture import live_packet_monitor
 from core.preprocessor import preprocess_file, extract_packet_features, clean_dataframe
-from models.loader import instantiate_model
+from models.model_loader import instantiate_model
 from siem.wazuh_forwarder import forward_alert
 from utils.packet_utils import print_packet_summary, drop_columns
 from utils.file_saver import safe_save_path, save_dataframe

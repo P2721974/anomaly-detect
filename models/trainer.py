@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from models.loader import instantiate_model
+from models.model_loader import instantiate_model
 from utils.metrics_utils import pretty_print_metadata
 from utils.file_saver import safe_save_path
 from utils.config_loader import get_config

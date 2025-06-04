@@ -31,6 +31,12 @@ from models.detector import run_detection, run_live_detection
 
 
 def parse_args():
+    """
+    Parses command-line arguments.
+    
+    Returns:
+        argparse.Namespace: Parsed arguments.
+    """
     parser = argparse.ArgumentParser(
         description=f"Anomaly-Based Threat Detection CLI (v{__version__})"
     )
@@ -86,6 +92,11 @@ def parse_args():
     return parser.parse_args()
 
 def main():
+    """
+    Main CLI entry point.
+    
+    Routes parsed command-line arguments to their related module dispatcher.
+    """
     args = parse_args()
 
     if args.command == "capture":

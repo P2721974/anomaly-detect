@@ -6,7 +6,7 @@ from scapy.utils import PcapReader
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.packet import Raw
 
-from utils.packet_utils import drop_columns, calc_entropy, safe_numeric_cast
+from utils.packet_utils import drop_columns, safe_numeric_cast
 from utils.file_saver import safe_save_path, save_dataframe
 from utils.progress import tqdm_bar
 from utils.config_loader import get_config
@@ -69,7 +69,6 @@ def extract_packet_fields(pkt, last_pkt_time=None) -> None:
         # Payload
         'payload_size': 0,
         'is_empty_payload': 1,
-        'payload_entropy': 0.0,
     }
 
     try:
@@ -114,7 +113,6 @@ def extract_packet_fields(pkt, last_pkt_time=None) -> None:
             payload = bytes(pkt[Raw])
             row['payload_size'] = len(payload)
             row['is_empty_payload'] = int(len(payload) == 0)
-            row['payload_entropy'] = calc_entropy(payload)
 
     except Exception as e:
         logger.warning("Packet parsing error: %s", e)

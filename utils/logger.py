@@ -5,16 +5,17 @@ import sys
 
 def get_logger(name: str = __name__, level: str = "INFO") -> logging.Logger:
     """
-    Returns a module-specific logger with consistent formatting and stream output.
+    Creates and returns a module-specific logger with standard formatting.
 
     Parameters:
-    - name: logger name, typically use __name__
-    - level: string log level (e.g., 'DEBUG', 'INFO')
+        name (str): Logger name, usually '__name__'.
+        level (str): Logging level (e.g., 'DEBUG', 'INFO', or 'WARNING').
 
     Returns:
-    - Configured Logger instance
+        logging.Logger: Configured logger instance.
     """
     logger = logging.getLogger(name)
+
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
         formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(name)s - %(message)s")
@@ -22,4 +23,5 @@ def get_logger(name: str = __name__, level: str = "INFO") -> logging.Logger:
         logger.addHandler(handler)
         logger.setLevel(getattr(logging, level.upper(), logging.INFO))
         logger.propagate = False
+        
     return logger
