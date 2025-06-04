@@ -92,78 +92,75 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
 
 def run_detection(args):
     """
-    Handles detection from a CSV or PCAP file using a pre-trained model.
+    Command-line interface handler for anomaly-based detection on network data.
 
     Parameters:
-        args: Parsed command-line arguments.
+        args: Parsed command-line arguments containing 'model_type', 'model_path', 'live', 'interface', 'input', and 'output'
+        options.
+
+    This dispatcher handles the flow of the following detection operations:
+        - Detection of real-time network traffix using a pre-trained model.
+        - Detection of network traffic from an input file ('.pcap' or '.csv') using a pre-trained model.
+
+    Uses config defaults and safe file naming if needed.
     """
-    batch_size = config['preprocessing']['batch_size']
     model_type = args.model or config['detection']['model_type']
     model_path = args.model_path or config['detection']['model_path']
     model_name = os.path.basename(model_path)
-    input_path = args.input or config['detection']['input_path']
-    default_output = args.output or config['detection']['csv_output']
-    output_path = safe_save_path(default_output)
 
     logger.info("Loading model: %s", model_name)
     model = instantiate_model(model_type)
     model.load(model_path)
 
-    logger.info("Loading data from: %s", input_path)
+    if args.live:
+        interface = args.interface or config['capture']['interface']
 
-    try:
-        if input_path.endswith(".pcap"):
-            logger.info("Detected PCAP input - preprocessing file before detection.")
-            df = preprocess_file(input_path, batch_size, label=None)
-        elif input_path.endswith(".csv"):
-            logger.info("Detected CSV input - loading data directly from file.")
-            df = pd.read_csv(input_path)
-        else:
-            logger.error("Unsupported input file format. Use '.pcap' or '.csv'.")
-            return
-        
-        if df.empty:
-            logger.warning("No usable packets to scan after loading.")
-            return
+        # Not a fan of defining this within a function but i can't think of another way to do it
+        def live_packet_handler(pkt):
+            try:
+                df = extract_packet_features(pkt)
 
-        detection(model, df, model_type, model_name, model_path, output_path)
-    
-    except Exception as e:
-        logger.error("Detection input data is invalid: %s", e)
+                if df is None or df.empty:
+                    return  # skip unprocessable packets
 
+                df = clean_dataframe(df)
 
-def run_live_detection(args):
-    """
-    Performs real-time detection on live packet data from a network interface.
+                if df.empty:
+                    return  # skip packets with no usable features
 
-    Parameters:
-        args: Parsed command-line arguments including interface and model config.
-    """
-    model_type = args.model or config['detection']['model_type']
-    model_path = args.model_path or config['detection']['model_path']
-    model_name = os.path.basename(model_path)
-    interface = args.interface or config['capture']['interface']
+                detection(model, df, model_type, model_name, model_path, live=True)
+                print_packet_summary(pkt)
 
-    model = instantiate_model(model_type)
-    model.load(model_path)
+            except Exception as e:
+                logger.warning("Live packet processing failed: %s", e)
 
-    # I hate that this is defined within another func but i can't think of another way to do it
-    def live_packet_handler(pkt):
+        live_packet_monitor(interface, live_packet_handler, count=0, timeout=None)
+
+    else:
+        batch_size = config['preprocessing']['batch_size']
+        input_path = args.input or config['detection']['input_path']
+        default_output = args.output or config['detection']['csv_output']
+        safe_output = safe_save_path(default_output)
+
+        logger.info("Loading data from: %s", input_path)
         try:
-            df = extract_packet_features(pkt)
+            if input_path.endswith(".pcap"):
+                logger.info("Detected PCAP input - preprocessing file before detection.")
+                df = preprocess_file(input_path, batch_size, label=None)
 
-            if df is None or df.empty:
-                return  # skip unprocessable packets
+            elif input_path.endswith(".csv"):
+                logger.info("Detected CSV input - loading data directly from file.")
+                df = pd.read_csv(input_path)
 
-            df = clean_dataframe(df)
-
+            else:
+                logger.error("Unsupported input file format. Use '.pcap' or '.csv'.")
+                return
+            
             if df.empty:
-                return  # skip packets with no usable features
+                logger.warning("No usable packets to scan after loading.")
+                return
 
-            detection(model, df, model_type, model_name, live=True)
-            print_packet_summary(pkt)
-
+            detection(model, df, model_type, model_name, model_path, safe_output)
+        
         except Exception as e:
-            logger.warning("Live packet processing failed: %s", e)
-
-    live_packet_monitor(interface, live_packet_handler, count=0, timeout=None)
+            logger.error("Detection input data is invalid: %s", e)

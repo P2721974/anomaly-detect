@@ -16,6 +16,9 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 import absl.logging
 absl.logging.set_verbosity(absl.logging.ERROR)
 
+# Suppress StandardScaler feature warning for autoencoders on live data
+warnings.filterwarnings("ignore", message=".*does not have valid feature names.*")
+
 # --- End of warning suppression block ---
 
 # cli/main.py
@@ -27,7 +30,7 @@ from core.capture import run_capture
 from core.preprocessor import run_preprocessor
 from core.dataset_utils import run_dataset_utils
 from models.trainer import run_train_model
-from models.detector import run_detection, run_live_detection
+from models.detector import run_detection
 
 
 def parse_args():
@@ -112,10 +115,7 @@ def main():
         run_train_model(args)
 
     elif args.command == "detect":
-        if args.live:
-            run_live_detection(args)
-        else:
-            run_detection(args)
+        run_detection(args)
             
 
 if __name__ == "__main__":

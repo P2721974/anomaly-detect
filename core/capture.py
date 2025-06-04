@@ -80,7 +80,7 @@ def run_capture(args) -> None:
         - Network capture and save to PCAP file.
         - Live network monitoring with basic packet data printed to screen.
 
-    Uses config defaults and safe file naming when needed.
+    Uses config defaults and safe file naming if needed.
     """
     interface = args.interface or config['capture']['interface']
     packet_count = args.packet_count or config['capture']['packet_count'] if not args.live else 0
