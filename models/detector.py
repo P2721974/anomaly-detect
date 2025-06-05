@@ -90,6 +90,34 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
     return df    
 
 
+# need to figure out way to avoid defining within a function if possible
+# and maybe move to packet utils too
+def create_packet_handler(model, model_type, model_name, model_path):
+    """
+    Returns a packet handler function with access to the detection context.
+    
+    This lets me run the detection module through a Scapy sniff as the 'prn', 
+    and I only define it here as to avoid defining a function within the detection dispatcher.
+    """
+    def handler(pkt):
+        try:
+            df = extract_packet_features(pkt)
+            if df is None or df.empty:
+                    return  # skip unprocessable packets
+        
+            df = clean_dataframe(df)
+            if df.empty:
+                return  # skip packets with no usable features
+
+            detection(model, df, model_type, model_name, model_path, live=True)
+            print_packet_summary(pkt)
+
+        except Exception as e:
+            logger.warning("Live packet processing failed: %s", e)
+        
+    return handler
+
+
 def run_detection(args):
     """
     Command-line interface handler for anomaly-based detection on network data.
@@ -114,25 +142,7 @@ def run_detection(args):
 
     if args.live:
         interface = args.interface or config['capture']['interface']
-
-        # Not a fan of defining this within a function but i can't think of another way to do it
-        def live_packet_handler(pkt):
-            try:
-                df = extract_packet_features(pkt)
-
-                if df is None or df.empty:
-                    return  # skip unprocessable packets
-
-                df = clean_dataframe(df)
-
-                if df.empty:
-                    return  # skip packets with no usable features
-
-                detection(model, df, model_type, model_name, model_path, live=True)
-                print_packet_summary(pkt)
-
-            except Exception as e:
-                logger.warning("Live packet processing failed: %s", e)
+        live_packet_handler = create_packet_handler(model, model_type, model_name, model_path)
 
         live_packet_monitor(interface, live_packet_handler, count=0, timeout=None)
 

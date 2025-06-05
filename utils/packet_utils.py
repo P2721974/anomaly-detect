@@ -1,8 +1,6 @@
 # utils/packet_utils.py
 
-import math
 import decimal
-from collections import Counter
 from scapy.layers.inet import IP
 from scapy.data import IP_PROTOS
 
