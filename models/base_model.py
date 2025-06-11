@@ -98,21 +98,6 @@ class BaseModel(ABC):
         """
         return {}
 
-    def validate_input(self, X: Union[np.ndarray, pd.DataFrame]) -> None:
-        """
-        Basic input validation to ensure data is a 2D array or DataFrame.
-
-        Parameters:
-            X ([Union[np.ndarray, pd.DataFrame]]): Input data to validate.
-
-        Raises:
-            ValueError: If input data is not a valid structure.
-        """
-        if not isinstance(X, (np.ndarray, pd.DataFrame)):
-            raise ValueError("Input must be a numpy array or pandas DataFrame.")
-        if len(X.shape) != 2:
-            raise ValueError("Input must be 2-dimensional (samples, features).")
-
     def evaluate(self, X: Union[np.ndarray, pd.DataFrame], y: Any) -> dict:
         """
         Optional method for to evaluate model performance. 
