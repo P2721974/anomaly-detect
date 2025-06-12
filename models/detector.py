@@ -91,7 +91,7 @@ def detection(model, df, model_type, model_name, model_path, output_path=None, l
 
 
 # need to figure out way to avoid defining within a function if possible
-# and maybe move to packet utils too
+# and move to packet utils too if possible
 def create_packet_handler(model, model_type, model_name, model_path):
     """
     Returns a packet handler function with access to the detection context.
